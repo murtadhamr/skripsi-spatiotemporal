@@ -23,14 +23,14 @@ for (i in 1:9){
 }
 
 x =  dataset2
-y = co2
+Y = co2
 
 # using SVR
 library(e1071)
 regressor = svm(x = x, 
                 y = y,
                 type = 'eps-regression',
-                kernel = 'sigmoid')
+                kernel = 'radial')
 
 
 rmse = function(error)
@@ -42,5 +42,19 @@ error = regressor$residuals
 
 predictionRMSE = rmse(error)
 
+predictedY = predict(regressor, x)
+
+library(ggplot2)
+ggplot() +
+  geom_point(aes(x = datafull$id , y = datafull$y),
+             colour = 'red') +
+  geom_point(aes(x = datafull$id , y = predict(regressor, newdata = x)),
+            colour = 'blue')
+
+
+id = 1:25789
+datafull = cbind(cbind(id, x),  y)
+
+  
 
 
