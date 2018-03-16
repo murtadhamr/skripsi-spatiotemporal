@@ -25,10 +25,20 @@ for (i in 1:9){
 x =  dataset2
 Y = co2
 
+## 75% of the sample size
+smp_size <- floor(0.8 * nrow(x))
+
+## set the seed to make your partition reproductible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(x)), size = smp_size)
+
+train <- x[train_ind, ]
+test <- x[-train_ind, ]
+
 # using SVR
 library(e1071)
 regressor = svm(x = x, 
-                y = y,
+                y = Y,
                 type = 'eps-regression',
                 kernel = 'radial')
 
@@ -46,14 +56,14 @@ predictedY = predict(regressor, x)
 
 library(ggplot2)
 ggplot() +
-  geom_point(aes(x = datafull$id , y = datafull$y),
+  geom_point(aes(x = datafull$id , y = datafull$Y),
              colour = 'red') +
   geom_point(aes(x = datafull$id , y = predict(regressor, newdata = x)),
             colour = 'blue')
 
 
 id = 1:25789
-datafull = cbind(cbind(id, x),  y)
+datafull = cbind(cbind(id, x),  Y)
 
   
 
