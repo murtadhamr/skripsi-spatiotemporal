@@ -25,46 +25,44 @@ for (i in 1:9){
 x =  dataset2
 Y = co2
 
-## 75% of the sample size
-smp_size <- floor(0.8 * nrow(x))
-
-## set the seed to make your partition reproductible
-set.seed(123)
-train_ind <- sample(seq_len(nrow(x)), size = smp_size)
-
-train <- x[train_ind, ]
-test <- x[-train_ind, ]
-
-# using SVR
-library(e1071)
-regressor = svm(x = x, 
-                y = Y,
-                type = 'eps-regression',
-                kernel = 'radial')
-
-
-rmse = function(error)
-{
-  sqrt(mean(error^2))
-}
-
-error = regressor$residuals
-
-predictionRMSE = rmse(error)
-
-predictedY = predict(regressor, x)
-
-library(ggplot2)
-ggplot() +
-  geom_point(aes(x = datafull$id , y = datafull$Y),
-             colour = 'red') +
-  geom_point(aes(x = datafull$id , y = predict(regressor, newdata = x)),
-            colour = 'blue')
-
-
 id = 1:25789
 datafull = cbind(cbind(id, x),  Y)
 
+library(caTools)
+set.seed(123)
+split = sample.split(datafull$Y, SplitRatio = 0.8)
+training_set = subset(datafull, split == TRUE)
+test_set = subset(datafull, split == FALSE)
+
+# using SVR
+library(e1071)
+regressor = svm(x = training_set[, 2:10] ,
+                y = training_set[, 11],
+                type = 'eps-regression',
+                kernel = 'radial')
+
+predictedY = predict(regressor, test[, 2:10])
+
+library(ggplot2)
+ggplot() +
+  geom_point(aes(x = test_set$id , y = test_set[, 11]),
+             colour = 'red') +
+  geom_point(aes(x = test_set$id , y = predict(regressor, newdata = test_set[, 2:10])),
+             colour = 'blue') 
+  
+  
+
+library(Metrics)
+predictionRMSE = rmse(test_set$Y, predict(regressor, newdata = test_set[, 2:10]))
+
+pacf(co2, length(co2) - 1, pl = TRUE)
+
+library(forecast)
+library(tseries)
+adf.test(co2, alternative = 'stationary', lag.max = 20)
+
+#making blank dataframe to store concentration value from nearest point(by index)
+dataset2 = as.data.frame(matrix(nrow = 25789, ncol = 30))
   
 
 
