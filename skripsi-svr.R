@@ -1,16 +1,14 @@
+library(ggplot2)
+library(e1071)
+library(caTools)
+library(FNN)
+library(Metrics)
 #read dataset
 dataset = read.csv('dataset22-26(fix).csv')
 
-#selecting related attributes in building model
-selected = dataset[, 5:8]
-
-#selecting c02 value from dataframe x
-co2 = selected[, 3]
-lonlat = selected[, 1:2]
-
+#####     CO2       #####
 #finding 9 nearest point from will-be-predicted point
-library(FNN)
-nearest = knn.index(lonlat, k=9, algorithm = "kd_tree")
+nearest = knn.index(data = dataset[, 3:6],  k=9, algorithm = "kd_tree")
 
 #making blank dataframe to store concentration value from nearest point(by index)
 dataset2 = as.data.frame(matrix(nrow = 25789, ncol = 9))
@@ -18,51 +16,45 @@ dataset2 = as.data.frame(matrix(nrow = 25789, ncol = 9))
 #storing nearest concentration value to dataset2
 for (i in 1:9){
   for (j in 1: 25789){
-    dataset2[j, i] = co2[nearest[j, i]]
+    dataset2[j, i] = dataset[, 7][nearest[j, i]]
   }
 }
 
+#storing features and target to var x and Y
 x =  dataset2
-Y = co2
+Y = dataset[, 7]
 
+#binding x and Y with its id
 id = 1:25789
 datafull = cbind(cbind(id, x),  Y)
 
-library(caTools)
+#data sampling (0.8 train, 0.2 test)
 set.seed(123)
 split = sample.split(datafull$Y, SplitRatio = 0.8)
 training_set = subset(datafull, split == TRUE)
 test_set = subset(datafull, split == FALSE)
 
 # using SVR
-library(e1071)
 regressor = svm(x = training_set[, 2:10] ,
                 y = training_set[, 11],
                 type = 'eps-regression',
                 kernel = 'radial')
 
-predictedY = predict(regressor, test[, 2:10])
+predictedY = predict(regressor, test_set[, 2:10])
 
-library(ggplot2)
+#plotting the actual and predcited data
 ggplot() +
   geom_point(aes(x = test_set$id , y = test_set[, 11]),
              colour = 'red') +
   geom_point(aes(x = test_set$id , y = predict(regressor, newdata = test_set[, 2:10])),
              colour = 'blue') 
   
-  
-
-library(Metrics)
+#Root Mean Squared Error of CO2 Spatial Prediction
 predictionRMSE = rmse(test_set$Y, predict(regressor, newdata = test_set[, 2:10]))
 
-pacf(co2, length(co2) - 1, pl = TRUE)
+##### CO #####
 
-library(forecast)
-library(tseries)
-adf.test(co2, alternative = 'stationary', lag.max = 20)
 
-#making blank dataframe to store concentration value from nearest point(by index)
-dataset2 = as.data.frame(matrix(nrow = 25789, ncol = 30))
   
 
 
