@@ -102,19 +102,32 @@ for(i in 1:nrow(index_interpolated)){
 
 trunc <- function(x, ..., prec = 0) base::trunc(x * 10^prec, ...) / 10^prec
 
-trunc(runif(1, 103, 104), prec = 3)
 
-random_point = as.data.frame(matrix(nrow = 53, ncol = 2))
+random_point = as.data.frame(matrix(nrow = 53, ncol = 6))
 
 for(i in 1:nrow(index_interpolated)){
-  #lat
-  random_point[i, 1] = trunc(runif(1, min_max_longlat[i, 1], min_max_longlat[i, 2]), prec = 3)
-  #lon
-  random_point[i, 2] = trunc(runif(1, min_max_longlat[i, 3], min_max_longlat[i, 4]), prec = 3)
+  for(j in 1:ncol(random_point)){
+    if(j == (sum(index_interpolated[i, ]==0)*2) || j < (sum(index_interpolated[i, ]==0)*2)){
+      #lat
+      if(j%%2 != 0)
+        random_point[i, j] = trunc(runif(1, min_max_longlat[i, 1], min_max_longlat[i, 2]), prec = 3)
+      #lon
+      else if (j%%2 == 0)
+        random_point[i, j] = trunc(runif(1, min_max_longlat[i, 3], min_max_longlat[i, 4]), prec = 3)
+    }
+    else
+      break
+  }
+}
+
+euclideanDistance = function(x, y, a, b){
+  dist = sqrt(((x-a)^2)+((y-b)^2)) 
+  return(dist)
 }
 
 ## Spatial Interpolation ##
-inverseDitanceWeight_3 = function(a1,a2,a3,a4,a5,d1,d2,d3,d4,d5){
+inverseDitanceWeight_3 = function(lat_random, long_random, interpolated_data){
+  d1 = euclideanDistance(lat_random, long_random, interpolated_data[i, 5], interpolated_data[i, 6])
   sigma_wz = (a1/d1^2)+(a2/d2^2)+(a3/d3^2)+(a4/d4^2)+(a5/d5^2)
   sigma_w = (1/d1^2)+(1/d2^2)+(1/d3^2)+(1/d4^2)+(1/d5^2)
   return(sigma_wz/sigma_w)
@@ -133,7 +146,7 @@ inverseDitanceWeight_1 = function(a1,a2,a3,a4,a5,a6,a7,d1,d2,d3,d4,d5,d6,d7){
 }
 
 
-
+aaaaaaaaa
 
 #####     Spatial Model     #####
 #####     CO2       #####
